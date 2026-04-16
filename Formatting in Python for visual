@@ -1,0 +1,43 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+
+df = pd.read_csv("Road_Weather_Information_Stations_20260415.csv")
+
+metric = "RoadSurfaceTemperature"
+DOT_VALUE = 1000
+DOTS_PER_ROW = 50
+
+summary = df.groupby("StationName")[metric].sum().reset_index()
+summary["dots"] = (summary[metric] / DOT_VALUE).round().astype(int)
+
+# Order stations (top to bottom)
+order = [
+    "AuroraBridge",
+    "HarborAveUpperNorthBridge",
+    "MagnoliaBridge",
+    "AlbroPlaceAirportWay",
+    "RooseveltWay_NE80thSt",
+    "SpokaneSwingBridge"
+]
+summary["StationName"] = pd.Categorical(summary["StationName"], categories=order, ordered=True)
+summary = summary.sort_values("StationName")
+
+colors = ["#1f5fe0","#339af0","#9c4fd8","#ef4b91","#ff6a00","#f2b705"]
+
+plt.figure(figsize=(12,6))
+
+for i, row in summary.iterrows():
+    dots = row["dots"]
+    xs = [(d % DOTS_PER_ROW) for d in range(dots)]
+    ys = [i - (d // DOTS_PER_ROW)*0.2 for d in range(dots)]
+    
+    plt.scatter(xs, ys, s=40, color=colors[i])
+    
+    if dots > 0:
+        plt.text(max(xs)+2, i, f"{row[metric]:,.2f}", va="center")
+
+plt.yticks(range(len(summary)), summary["StationName"])
+plt.title("Road Weather Information Stations\nVisualization made by Roya Hashimi", fontsize=16)
+plt.axis("off")
+
+plt.show()
